@@ -5,7 +5,7 @@ console.log(API_KEY);
 // Create a map object
 var myMap = L.map("map", {
     center: [37.09, -95.71],
-    zoom: 5
+    zoom: 3
 });
 
 L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
@@ -19,10 +19,13 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 
 console.log(myMap);
 
+function markerSize(mag){
+    return mag * 10000;
+}
+
 d3.json(url, function(data) {
     var earthquakes = data.features;
     console.log(earthquakes);
-
 
     for (var i = 0; i < earthquakes.length; i++) {
         var lat = earthquakes[i].geometry.coordinates[0];
@@ -32,7 +35,7 @@ d3.json(url, function(data) {
             fillOpacity: 0.75,
             color: "blue",
             fillColor: "purple",
-            radius: 100
+            radius: markerSize(earthquakes[i].properties.mag)
         }).bindPopup("<h1>" + earthquakes[i].properties.title + "</h1> <hr> <h3>Magnitude: " + earthquakes[i].properties.mag + "</h3>").addTo(myMap);
     }
 });
