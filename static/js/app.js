@@ -1,14 +1,14 @@
 var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
-console.log(url);
-console.log(API_KEY);
 
 // Create a map object
 var myMap = L.map("map", {
     center: [37.09, -95.71],
     zoom: 3
+    //layers: lightmap
 });
 
-L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+// Make light and dark layers
+var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
   attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
   tileSize: 512,
   maxZoom: 18,
@@ -17,8 +17,50 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   accessToken: API_KEY
 }).addTo(myMap);
 
-console.log(myMap);
+var darkmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+    tileSize: 512,
+    maxZoom: 18,
+    id: "dark-v10",
+    accessToken: API_KEY
+});
 
+// base layer object
+var baseMaps = {
+    "Light Map": lightmap,
+    "Dark Map": darkmap
+};
+
+// TODO overlay object
+// var overlayMaps = {
+//     Earthquakes: earthquakes
+// }
+
+// L.control.layers(baseMaps, {
+//     collapsed: false
+// }).addTo(myMap);
+
+d3.json(url, function(data) {
+    var earthquakes = data.features; 
+
+    for (var i = 0; i < earthquakes.length; i++) {
+        var lat = earthquakes[i].geometry.coordinates[0];
+        var lng = earthquakes[i].geometry.coordinates[1];
+        var depth = earthquakes[i].geometry.coordinates[2];
+        var mag = earthquakes[i].properties.mag;
+        var coords = [lng, lat];
+
+        L.circle(coords, {
+            fillOpacity: 0.75,
+            color: "pink",
+            fillColor: markerColor(depth),
+            radius: markerSize(mag)
+        }).bindPopup("<h1>" + earthquakes[i].properties.title + "</h1> <hr> <p>" + new Date(earthquakes[i].properties.time) + "</p> <h3>Magnitude: " + mag + "</h3> <h3>Depth: " + depth + "</h3>").addTo(myMap);
+    }
+    
+});
+
+// Marker functions
 function markerSize(mag) {
     return mag * 10000;
 }
@@ -49,31 +91,7 @@ function markerColor(depth) {
     return color;
 }
 
-d3.json(url, function(data) {
-    var earthquakes = data.features; 
-    var depthTester = [];
-    console.log(earthquakes);
-
-    for (var i = 0; i < earthquakes.length; i++) {
-        var lat = earthquakes[i].geometry.coordinates[0];
-        var lng = earthquakes[i].geometry.coordinates[1];
-        var depth = earthquakes[i].geometry.coordinates[2];
-        var mag = earthquakes[i].properties.mag;
-        var coords = [lng, lat];
-
-        depthTester.push(depth);
-
-        L.circle(coords, {
-            fillOpacity: 0.75,
-            color: "pink",
-            fillColor: markerColor(depth),
-            radius: markerSize(mag)
-        }).bindPopup("<h1>" + earthquakes[i].properties.title + "</h1> <hr> <h3>Magnitude: " + mag + "</h3> <h3>Depth: " + depth + "</h3>").addTo(myMap);
-    }
-
-    
-});
-
+// Add legend
 var legend = L.control({position: 'bottomright'});
 legend.onAdd = function (myMap) {
 
