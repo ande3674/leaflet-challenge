@@ -19,23 +19,77 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 
 console.log(myMap);
 
-function markerSize(mag){
+function markerSize(mag) {
     return mag * 10000;
 }
 
+function markerColor(depth) {
+    var color = "";
+    if (depth > 600) {
+        color = "#8B0000";
+    }
+    else if (depth > 400) {
+        color = "#B22222";
+    }
+    else if (depth > 200) {
+        color = "#CD5C5C";
+    }
+    else if (depth > 150) {
+        color = "#FF4500";
+    }
+    else if (depth > 100) {
+        color = "#FF6347";
+    }
+    else if (depth > 50) {
+        color = "#E9967A";
+    }
+    else {
+        color = "#FFA07A";
+    }
+    return color;
+}
+
 d3.json(url, function(data) {
-    var earthquakes = data.features;
+    var earthquakes = data.features; 
+    var depthTester = [];
     console.log(earthquakes);
 
     for (var i = 0; i < earthquakes.length; i++) {
         var lat = earthquakes[i].geometry.coordinates[0];
         var lng = earthquakes[i].geometry.coordinates[1];
+        var depth = earthquakes[i].geometry.coordinates[2];
+        var mag = earthquakes[i].properties.mag;
         var coords = [lng, lat];
+
+        depthTester.push(depth);
+
         L.circle(coords, {
             fillOpacity: 0.75,
-            color: "blue",
-            fillColor: "purple",
-            radius: markerSize(earthquakes[i].properties.mag)
-        }).bindPopup("<h1>" + earthquakes[i].properties.title + "</h1> <hr> <h3>Magnitude: " + earthquakes[i].properties.mag + "</h3>").addTo(myMap);
+            color: "pink",
+            fillColor: markerColor(depth),
+            radius: markerSize(mag)
+        }).bindPopup("<h1>" + earthquakes[i].properties.title + "</h1> <hr> <h3>Magnitude: " + mag + "</h3> <h3>Depth: " + depth + "</h3>").addTo(myMap);
     }
+
+    
 });
+
+var legend = L.control({position: 'bottomright'});
+legend.onAdd = function (myMap) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [0, 50, 100, 50, 100, 150, 200, 400, 600],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square 
+    //  for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + markerColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(myMap);
