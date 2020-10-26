@@ -31,6 +31,9 @@ var baseMaps = {
     "Dark Map": darkmap
 };
 
+// Add GeoJSON
+var plateGeoJSON = L.geoJSON(geojsonfeatures).addTo(myMap);
+
 // TODO overlay object
 // var overlayMaps = {
 //     Earthquakes: earthquakes
